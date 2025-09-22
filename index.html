@@ -1,0 +1,79 @@
+{% extends "layout.html" %}
+
+{% block title %}Factuur Generator{% endblock %}
+
+{% block content %}
+<h2>Voer klanten en producten in</h2>
+<form action="/generate" method="post" id="factuurForm">
+    <input type="hidden" name="klantCounter" id="klantCounter" value="0">
+    <div id="klantenContainer"></div>
+    <button type="button" class="btn btn-primary mb-2" onclick="addKlant()">Voeg Klant toe</button>
+    <input type="submit" class="btn btn-success mb-2" value="Genereer PDF">
+</form>
+
+<script>
+let klantCounter = 0;
+
+// Voeg nieuwe klant toe
+function addKlant() {
+    klantCounter++;
+    document.getElementById("klantCounter").value = klantCounter;
+
+    const container = document.getElementById('klantenContainer');
+    const klantDiv = document.createElement('div');
+    klantDiv.classList.add('klant','mb-4');
+    klantDiv.innerHTML = `
+        <h4>Klant K${klantCounter}</h4>
+        <label>Klantnaam:</label><input type="text" name="klantnaam_${klantCounter}" required class="form-control mb-1">
+        <label>Mobiel:</label><input type="text" name="mobiel_${klantCounter}" required class="form-control mb-2">
+        <table class="table table-bordered productenTable">
+            <thead class="table-dark">
+                <tr>
+                    <th>Productnaam</th>
+                    <th>Aantal</th>
+                    <th>Inkoopprijs (SRD)</th>
+                    <th>Fee (%)</th>
+                    <th>Verkoopprijs (SRD)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><input type="text" name="product_${klantCounter}[]" required class="form-control"></td>
+                    <td><input type="number" name="aantal_${klantCounter}[]" step="1" value="1" oninput="calculatePrice(this)" required class="form-control"></td>
+                    <td><input type="number" name="inkoop_${klantCounter}[]" step="0.01" oninput="calculatePrice(this)" required class="form-control"></td>
+                    <td><input type="number" name="fee_${klantCounter}[]" step="0.01" oninput="calculatePrice(this)" required class="form-control"></td>
+                    <td><input type="number" name="verkoop_${klantCounter}[]" readonly class="form-control"></td>
+                </tr>
+            </tbody>
+        </table>
+        <button type="button" class="btn btn-secondary mb-3" onclick="addProduct(${klantCounter})">Voeg product toe</button>
+        <hr>
+    `;
+    container.appendChild(klantDiv);
+}
+
+// Voeg nieuw product toe aan klant
+function addProduct(klantId) {
+    const klantDivs = document.querySelectorAll('.klant');
+    const klantDiv = klantDivs[klantId - 1];
+    const table = klantDiv.querySelector('.productenTable tbody');
+    const row = table.insertRow(-1);
+    row.innerHTML = `
+        <td><input type="text" name="product_${klantId}[]" required class="form-control"></td>
+        <td><input type="number" name="aantal_${klantId}[]" step="1" value="1" oninput="calculatePrice(this)" required class="form-control"></td>
+        <td><input type="number" name="inkoop_${klantId}[]" step="0.01" oninput="calculatePrice(this)" required class="form-control"></td>
+        <td><input type="number" name="fee_${klantId}[]" step="0.01" oninput="calculatePrice(this)" required class="form-control"></td>
+        <td><input type="number" name="verkoop_${klantId}[]" readonly class="form-control"></td>
+    `;
+}
+
+// Bereken verkoopprijs automatisch
+function calculatePrice(element){
+    const row = element.parentElement.parentElement;
+    const aantal = parseFloat(row.querySelector('input[name^="aantal"]').value) || 0;
+    const inkoop = parseFloat(row.querySelector('input[name^="inkoop"]').value) || 0;
+    const fee = parseFloat(row.querySelector('input[name^="fee"]').value) || 0;
+    row.querySelector('input[name^="verkoop"]').value = (aantal * inkoop * (1 + fee/100)).toFixed(2);
+}
+</script>
+{% endblock %}

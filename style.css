@@ -1,0 +1,12 @@
+body {
+    background-color: #f8f9fa;
+}
+h2 {
+    margin-bottom: 20px;
+}
+.klant {
+    background-color: #fff;
+    padding: 15px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
